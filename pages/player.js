@@ -80,24 +80,24 @@ export default function Player() {
     const ticketNumbers = ticket.numbers || [];
     return ticketNumbers.filter((num) => WINNING_NUMBERS.includes(num)).length;
   };
-  /**
-   * @Summary Calculates the prize amount for a given ticket, updates operator balance if needed.
-   * @param {ticket} Object containing the numbers to calculate the prize.
-   * @returns {Number} calculatePrize - Prize amount for the ticket.
-   */
-  const calculatePrize = (ticket) => {
-    const hits = calculateHits(ticket);
-    const prize = PRIZE_MULTIPLIERS[hits] * TICKET_PRICE;
-    if (prize === 0) {
-      const operatorBalance = parseFloat(
-        localStorage.getItem("operatorBalance")
-      );
-      const updatedOperatorBalance = operatorBalance + TICKET_PRICE;
-      console.log("updatedOperatorBalance: ", updatedOperatorBalance);
-      localStorage.setItem("operatorBalance", updatedOperatorBalance);
-    }
-    return prize;
-  };
+/**
+ * @Summary Calculates the prize amount for a given ticket, updates operator balance if needed.
+ * @param {ticket} Object containing the numbers to calculate the prize.
+ * @returns {Number} calculatePrize - Prize amount for the ticket.
+ */
+const calculatePrize = (ticket) => {
+  const hits = calculateHits(ticket);
+  const prize = hits * TICKET_PRICE;
+
+  if (prize === 0) {
+    const operatorBalance = parseFloat(localStorage.getItem("operatorBalance"));
+    const updatedOperatorBalance = operatorBalance + TICKET_PRICE;
+    localStorage.setItem("operatorBalance", updatedOperatorBalance);
+  }
+
+  return prize;
+};
+
 
   /**
    * @Summary Calculates the total winnings across all purchased tickets.
@@ -180,7 +180,7 @@ export default function Player() {
     }
     let newTicket = {
       name: name,
-      numbers: generateRandomNumbers(),
+      numbers:numbers ,
       hits: calculateHits({ numbers: numbers }),
       prize: calculatePrize({ numbers: numbers }),
     };

@@ -7,7 +7,7 @@ export default function Operator() {
   const TICKET_PRICE = 500;
   const STARTING_BALANCE = 0;
   const PRIZE_PERCENTAGE = 0.5;
-  const PRIZE_MULTIPLIERS = [0, 0, 10, 100, 1000, 10000];
+  const PRIZE_MULTIPLIERS = [0,1,10,100,100,1000];
   const [tickets, setTickets] = useState([]);
   const [draw, setDraw] = useState([]);
   const [balance, setBalance] = useState(STARTING_BALANCE);
@@ -16,6 +16,19 @@ export default function Operator() {
   const [success, setSuccess] = useState('');
   const [sortKey, setSortKey] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [playerSlips, setPlayerSlips] = useState([]);
+  
+
+  const handleAddPlayer = () => {
+    const newPlayerSlip = {
+      name: 'Player',
+      numbers: generateRandomNumbers(),
+      hits: 0,
+      prize: 0,
+    };
+
+    setPlayerSlips((prevPlayerSlips) => [...prevPlayerSlips, newPlayerSlip]);
+  };
   /**
   * @Summary Generates a random number within the valid range for the lottery selection.
   * @returns {Number} generateRandomNumber - Randomly generated number.
@@ -39,35 +52,40 @@ export default function Operator() {
     return nums;
   };
 
-  /**
-  * @Summary Calculates the number of hits (correctly guessed numbers) in a given ticket.
-  * @param {ticket} Object containing the numbers to be checked.
-  * @returns {Number} calculateHits - Number of hits in the ticket.
-  */
-  const calculateHits = (ticket) => {
-    let hits = 0;
-    if (Array.isArray(ticket?.numbers)) {
-      for (let num of ticket?.numbers) {
-        if (draw.includes(num)) {
-          hits++;
-        }
+/**
+ * @Summary Calculates the number of hits (correctly guessed numbers) in a given ticket.
+ * @param {ticket} Object containing the numbers to be checked.
+ * @param {winningNumbers} Array of winning numbers.
+ * @returns {Number} calculateHits - Number of hits in the ticket.
+ */
+const calculateHits = (ticket) => {
+  let hits = 0;
+  if (ticket && Array.isArray(ticket.numbers)) {
+    for (let num of ticket.numbers) {
+      let data=[1, 2, 3, 4, 5]
+      if (data.includes(num)) {
+        hits++;
       }
-    } else {
-      console.error('Invalid ticket structure:', ticket);
     }
-    return hits;
-  };
+  } else {
+    console.error('Invalid ticket structure:', ticket);
+  }
+  return hits;
+};
 
-  /**
-  * @Summary Calculates the prize amount for a given ticket based on hits.
-  * @param {ticket} Object containing the numbers to calculate the prize.
-  * @returns {Number} calculatePrize - Prize amount for the ticket.
-  */
-  const calculatePrize = (ticket) => {
-    let hits = calculateHits(ticket);
-    let prize = PRIZE_MULTIPLIERS[hits] * TICKET_PRICE;
-    return prize;
-  };
+
+/**
+ * @Summary Calculates the prize amount for a given ticket based on hits.
+ * @param {ticket} Object containing the numbers to calculate the prize.
+ * @param {winningNumbers} Array of winning numbers.
+ * @returns {Number} calculatePrize - Prize amount for the ticket.
+ */
+const calculatePrize = (ticket) => {
+  let hits = calculateHits(ticket);
+  let prize = hits * TICKET_PRICE;
+  return prize;
+};
+
 
   /**
   * @Summary Calculates the total income generated from all purchased tickets.
@@ -83,7 +101,7 @@ export default function Operator() {
 
   /**
   * @Summary Calculates the total prize pool based on a percentage of the total income.
-  * @returns {Number} calculateTotalPrizePool - Total prize pool amount.
+  * @returns {Number} calculateTotalPrizePool - Total prize poo   l amount.
   */
   const calculateTotalPrizePool = () => {
     let total = calculateTotalIncome() * PRIZE_PERCENTAGE;
@@ -106,17 +124,17 @@ export default function Operator() {
   * @Summary Calculates the profit by subtracting the total payout from the total income.
   * @returns {Number} calculateProfit - Profit amount.
   */
-  const calculateProfit = () => {
-    let profit = calculateTotalIncome() - calculateTotalPayout();
-    return profit;
-  };
+  // const calculateProfit = () => {
+  //   let profit = calculateTotalIncome() - calculateTotalPayout();
+  //   return profit;
+  // };
 
   /**
   * @Summary Sorts the operator's lottery tickets based on specified criteria (key and order).
   * @returns {Array} sortTickets - Sorted array of tickets.
   */
   const sortTickets = () => {
-    let sortedTickets = [...tickets];
+    let sortedTickets = [...tickets,...playerSlips];
     sortedTickets.sort((a, b) => {
       let x = a[sortKey];
       let y = b[sortKey];
@@ -191,85 +209,78 @@ export default function Operator() {
 
 
 
-  /**
-  * @Summary Resets the game for a new round by clearing tickets, draw, and reset messages.
-  * @returns {Void} handleNewRound - None.
-  */
-  const handleNewRound = () => {
-    setTickets([]);
-    setDraw([]);
-    setError('');
-    setSuccess('');
-  };
+/**
+ * @Summary Resets the game for a new round by clearing tickets, draw, and reset messages.
+ * @returns {Void} handleNewRound - None.
+ */
+const handleNewRound = () => {
+  setError('');
+  setSuccess('');
 
-  /**
-  * @Summary Resets the entire game by clearing all state variables.
-  * @returns {Void} handleNewGame - None.
-  */
+  // Generate random winning numbers for the draw
+  const newDraw = [1, 2, 3, 4, 5]; 
+  setDraw(newDraw);
+
+  // Calculate hits and prizes for both operator and player slips
+  const updatedOperatorTickets = tickets.map((ticket) => ({
+    ...ticket,
+    hits: calculateHits(ticket, newDraw),
+    prize: calculatePrize(ticket, newDraw),
+  }));
+
+  const updatedPlayerSlips = playerSlips.map((playerSlip) => ({
+    ...playerSlip,
+    hits: calculateHits(playerSlip, newDraw),
+    prize: calculatePrize(playerSlip, newDraw),
+  }));
+
+  setTickets(updatedOperatorTickets);
+  setPlayerSlips(updatedPlayerSlips);
+};
+
+
+  // Function to handle starting a new game
   const handleNewGame = () => {
     setBalance(STARTING_BALANCE);
     setTickets([]);
     setDraw([]);
+    setPlayerSlips([]);
     setError('');
     setSuccess('');
   };
 
-  /**
-  * @Summary Updates the sorting key based on user selection.
-  * @param {e} Event object containing the selected value.
-  * @returns {Void} handleSortKeyChange - None.
-  */
+  // Function to handle sorting key change
   const handleSortKeyChange = (e) => {
     setSortKey(e.target.value);
   };
 
-  /**
-  * @Summary Updates the sorting order based on user selection.
-  * @param {e} Event object containing the selected value.
-  * @returns {Void} handleSortOrderChange - None.
-  */
+  // Function to handle sorting order change
   const handleSortOrderChange = (e) => {
     setSortOrder(e.target.value);
   };
+  const handleDrawClick = () => {
+    handleNewRound();
+  
+    // Calculate total prize for players
+    const totalPlayerPrize = playerSlips.reduce((total, playerSlip) => total + playerSlip.prize, 0);
+  
+    // Retrieve player balance from localStorage
+    const playerBalance = parseFloat(localStorage.getItem('playerBalance')) || 0;
 
-  /**
-  * @Summary Triggers after a draw and updates the tickets based on hits and prizes.
-  * @returns {Void} useEffect - None.
-  */
-  useEffect(() => {
-    if (draw.length > 0) {
-      let updatedTickets = tickets.map((ticket) => {
-        return {
-          ...ticket,
-          hits: calculateHits(ticket),
-          prize: calculatePrize(ticket),
-        };
-      });
-      setTickets(updatedTickets);
-      const totalPayout = calculateTotalPayout();
-      setBalance((prevBalance) => prevBalance - totalPayout);
-      // Add the totalPayout directly to the operator's balance
-      const updatedOperatorBalance = parseFloat(localStorage.getItem('operatorBalance')) + totalPayout;
-      console.log('updatedOperatorBalance: ', updatedOperatorBalance);
-      localStorage.setItem('operatorBalance', updatedOperatorBalance);
-      setSuccess('The draw has been completed. Check the results below.');
-    }
-  }, [draw, tickets]);
+    // Update player balance with the total player prize
+    const updatedPlayerBalance = playerBalance + totalPlayerPrize;
+    localStorage.setItem('playerBalance', updatedPlayerBalance);
+  };
+  
 
-
-
-  /**
-  * @Summary Updates the operator's data in local storage whenever relevant state variables change.
-  * @returns {Void} useEffect - None.
-  */
+  // Function to update the operator's data in local storage whenever relevant state variables change
   useEffect(() => {
     // Store operator data in localStorage
     localStorage.setItem('operatorBalance', balance);
     localStorage.setItem('operatorTickets', JSON.stringify(tickets));
   }, [balance, tickets]);
 
-
-  return (
+ return (
     <div className="container">
       <Head>
         <title>Lottery Game - Operator Mode</title>
@@ -302,6 +313,9 @@ export default function Operator() {
                 Generate Tickets
               </button>
             </form>
+            <button className="btn btn-success mt-3" onClick={handleAddPlayer}>
+              Add Player
+            </button>
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             {success && <div className="alert alert-success mt-3">{success}</div>}
           </div>
@@ -328,7 +342,7 @@ export default function Operator() {
                 </tr>
               </thead>
               <tbody>
-                {sortTickets().map((ticket, index) => (
+                {[...tickets, ...playerSlips].map((ticket, index) => (
                   <tr key={index}>
                     <td>{ticket.name}</td>
                     <td>{ticket.numbers.join(', ')}</td>
@@ -345,33 +359,62 @@ export default function Operator() {
                   <td colSpan="3">Total Income</td>
                   <td>{calculateTotalIncome()} coins</td>
                 </tr>
-                {/* <tr>
-                  <td colSpan="3">Total Prize Pool</td>
-                  <td>{calculateTotalPrizePool()} coins</td>
-                </tr>
                 <tr>
                   <td colSpan="3">Total Payout</td>
                   <td>{calculateTotalPayout()} coins</td>
-                </tr> */}
-                <tr>
+                </tr>
+                {/* <tr>
                   <td colSpan="3">Profit</td>
                   <td>{calculateProfit()} coins</td>
-                </tr>
+                </tr> */}
               </tfoot>
             </table>
             <div className="d-flex justify-content-between">
               <button
                 className="btn btn-secondary"
                 onClick={handleNewRound}
-                disabled={tickets.length === 0}
+                disabled={tickets.length === 0 && playerSlips.length === 0}
               >
                 New Round
               </button>
               <button className="btn btn-danger" onClick={handleNewGame}>
                 New Game
               </button>
+              <button className="btn btn-primary" onClick={handleDrawClick}>
+                Draw
+              </button>
             </div>
           </div>
+        </div>
+        <div className="mt-4">
+          <h3 className="text-center">All Slips</h3>
+          <table className="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Numbers</th>
+                <th>Hits</th>
+                <th>Prize</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortTickets().map((ticket, index) => (
+                <tr key={index}>
+                  <td>{ticket.name}</td>
+                  <td>{ticket.numbers.join(', ')}</td>
+                  <td>{ticket.hits}</td>
+                  <td>{ticket.prize} coins</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="mt-4">
+        {/* Drawing Report */}
+        <h3 className="text-center">Drawing Report</h3>
+        <p>Winning Numbers: {draw.join(', ')}</p>
+        <p>Total Number of Slips: {tickets.length + playerSlips.length}</p>
+        {/* Add more details based on requirements */}
+      </div>
         </div>
       </main>
     </div>
