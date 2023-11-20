@@ -119,6 +119,17 @@ const calculatePrize = (ticket) => {
     }
     return total;
   };
+/**
+* @Summary Calculates the total payout amount for all player slips.
+* @returns {Number} calculateTotalPlayerPayout - Total player payout amount.
+*/
+const calculateTotalPlayerPayout = () => {
+  let total = 0;
+  for (let playerSlip of playerSlips) {
+    total += calculatePrize(playerSlip);
+  }
+  return total;
+};
 
   /**
   * @Summary Calculates the profit by subtracting the total payout from the total income.
@@ -312,10 +323,11 @@ const handleNewRound = () => {
               <button type="submit" className="btn btn-primary">
                 Generate Tickets
               </button>
-            </form>
-            <button className="btn btn-success mt-3" onClick={handleAddPlayer}>
-              Add Player
+              <button className="btn btn-primary" onClick={handleAddPlayer}>
+            Generate Tickets for player 
             </button>
+            </form>
+
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             {success && <div className="alert alert-success mt-3">{success}</div>}
           </div>
@@ -409,12 +421,14 @@ const handleNewRound = () => {
             </tbody>
           </table>
           <div className="mt-4">
-        {/* Drawing Report */}
-        <h3 className="text-center">Drawing Report</h3>
-        <p>Winning Numbers: {draw.join(', ')}</p>
-        <p>Total Number of Slips: {tickets.length + playerSlips.length}</p>
-        {/* Add more details based on requirements */}
-      </div>
+  {/* Drawing Report */}
+  <h3 className="text-center">Drawing Report</h3>
+  <p>Winning Numbers: {draw.join(', ')}</p>
+  <p>Total Number of Slips: {tickets.length + playerSlips.length}</p>
+  <p>Total Winning of Operator: {calculateTotalPayout()} coins</p>
+  <p>Total Winning of Player: {calculateTotalPlayerPayout()} coins</p>
+  {/* Add more details based on requirements */}
+</div>
         </div>
       </main>
     </div>
